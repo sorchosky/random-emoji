@@ -7,8 +7,9 @@ project-specific detail lives in `docs/PRD.md`, `docs/ARCHITECTURE.md`, and
 
 ## Project identity
 
-- **Name:** <fill in>
-- **One-liner:** <fill in>
+- **Name:** Emoji Pop
+- **One-liner:** Tap anywhere and a random emoji pops up, holds for a couple of
+  seconds, and fades away — a toddler toy for the iPad.
 - **Stack:** React + Vite, deployed on Vercel (default — override in ARCHITECTURE.md if this project differs)
 - **PRD:** `docs/PRD.md`
 - **Architecture / decisions:** `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`
