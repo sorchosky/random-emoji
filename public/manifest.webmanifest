@@ -1,0 +1,25 @@
+{
+  "name": "Emoji Pop",
+  "short_name": "Emoji Pop",
+  "description": "Tap anywhere and a random emoji pops up, then floats away.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#1b1033",
+  "theme_color": "#1b1033",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

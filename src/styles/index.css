@@ -1,0 +1,63 @@
+@import './emoji.css';
+@import './settings.css';
+
+:root {
+  --bg-top: #2b1a5e;
+  --bg-bottom: #12081f;
+  --panel: #241546;
+  --panel-border: #4a3585;
+  --text: #f4efff;
+  --text-dim: #b6a8dc;
+  --accent: #ffb340;
+  --focus: #7fd4ff;
+
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/*
+ * Toddler-proofing. Every rule here exists to stop a stray finger from taking
+ * her out of the app:
+ *   - position: fixed + overflow: hidden kills iOS rubber-band scrolling
+ *   - overscroll-behavior stops pull-to-refresh
+ *   - touch-action: none stops pinch/double-tap zoom and pan
+ *   - the user-select / touch-callout rules stop the long-press "Copy" bubble
+ *   - tap-highlight removes the grey flash on every single tap
+ */
+html,
+body {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: linear-gradient(170deg, var(--bg-top), var(--bg-bottom));
+  color: var(--text);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+}
+
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
