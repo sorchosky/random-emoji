@@ -44,6 +44,24 @@
   transform: translateY(1px);
 }
 
+.settings__reset {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 12px;
+  border: 1px solid var(--panel-border);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-weight: 650;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.settings__reset:active {
+  transform: translateY(1px);
+}
+
 .settings__hint {
   margin-top: 14px;
   color: var(--text-dim);
@@ -95,7 +113,7 @@
   width: 60px;
   height: 34px;
   border-radius: 17px;
-  background: #3a2a66;
+  background: #e2d6bd;
   transition: background 160ms ease;
 }
 

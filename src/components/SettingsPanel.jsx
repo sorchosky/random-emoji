@@ -8,7 +8,12 @@ const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]'
  * it's also the one that has to meet the accessibility bar: 44px targets,
  * visible focus, Esc to close, and focus trapped while open.
  */
-export default function SettingsPanel({ settings, onChange, onClose }) {
+export default function SettingsPanel({
+  settings,
+  onChange,
+  onClose,
+  onResetCount,
+}) {
   const panelRef = useRef(null)
   const previouslyFocused = useRef(null)
 
@@ -86,6 +91,14 @@ export default function SettingsPanel({ settings, onChange, onClose }) {
           }
           onChange={(value) => onChange('haptics', value)}
         />
+
+        <button
+          className="settings__reset"
+          type="button"
+          onClick={onResetCount}
+        >
+          Reset tap counter
+        </button>
 
         <button className="settings__close" type="button" onClick={onClose}>
           Back to playing

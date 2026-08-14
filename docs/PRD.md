@@ -39,6 +39,12 @@ That's the whole app. Everything else exists to protect that loop.
 6. **Haptics.** A light buzz per tap where the device supports it.
 7. **Parent gesture.** A deliberate hidden hold opens settings; nothing a child
    would find by accident.
+8. **Onboarding hint.** "Tap anywhere to make an emoji" is shown on load and
+   fades away permanently after the third tap — a nudge for whoever hands the
+   tablet over, gone before it becomes clutter.
+9. **Tap counter.** A running count of taps in the top-right corner. Resettable
+   only from the Settings panel (behind the parent gesture) — not by any
+   gesture a child could stumble into.
 
 ## Explicitly out of scope
 

@@ -22,6 +22,7 @@ gates the result on build + tests, and ticks the box only when it's green.
 - [x] T-06 — Haptics
 - [x] T-07 — Parent gesture and settings panel
 - [x] T-08 — Polish and deploy readiness
+- [x] T-09 — Light theme, onboarding hint, tap counter
 
 ---
 
@@ -137,3 +138,25 @@ judgment calls in `docs/DECISIONS.md`.
 
 **Done when.** `npm run build` is clean, `npm run preview` verified, and
 `node scripts/verify-app.mjs` passes every check.
+
+---
+
+## T-09 — Light theme, onboarding hint, tap counter
+
+**Scope.** Replace the dark purple palette with a light theme across
+`index.html` (`theme-color`), `public/manifest.webmanifest`
+(`background_color`/`theme_color`), and `src/styles/index.css`
+(`color-scheme`, `--bg-*`/`--text-*` custom properties), so Safari's status
+bar and URL-bar chrome render consistently light instead of showing purple.
+Add an `OnboardingHint` component showing "Tap anywhere to make an emoji" on
+load, fading permanently after the third tap. Add a display-only `TapCounter`
+chip, top-right, backed by shared tap-count state in `App.jsx`. Add a "Reset
+tap counter" button inside `SettingsPanel`, gated behind the existing 2.5s
+corner-hold parent gesture — the counter is not resettable from anywhere a
+child could reach.
+
+**Done when.** `npm run build` is clean, `node scripts/verify-app.mjs` passes
+every check, the background reads as a consistent light color with no purple
+in the simulated safe-area/status-bar region, the hint fades after 3 taps and
+stays gone even after a Settings-panel reset, and the counter only resets via
+the parent gesture.

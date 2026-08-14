@@ -7,6 +7,43 @@
 
 ---
 
+### 2026-08-14 — Tap counter reset lives in Settings, not on the chip
+
+**Context:** The tap counter (top-right) needed a reset control. The obvious
+place is a long-press directly on the counter chip itself, but that's a
+gesture a curious toddler will find by accident within a normal play session
+— the opposite of "tamper-proof."
+
+**Decision:** The chip is display-only, with no pointer handlers of its own.
+Reset is a button inside `SettingsPanel`, which is already gated behind the
+2.5s top-left corner hold. Resetting the counter now takes the same
+deliberate parent gesture as changing sound/haptics settings.
+
+**Alternatives considered:** A long-press on the chip — rejected, not
+toddler-proof. A separate corner-hold zone just for reset — rejected as
+needless complexity when Settings already exists as the parent-only surface.
+
+**Reversible?** Yes — the reset button and its handler are self-contained.
+
+---
+
+### 2026-08-14 — Onboarding hint's dismissal is a separate flag from the tap counter
+
+**Context:** The onboarding hint ("Tap anywhere to make an emoji") needed to
+fade after 3 taps. The simplest implementation drove both the hint and the
+visible counter off the same `tapCount` state — but that means a parent
+resetting the counter in Settings would also reset `tapCount` below 3 and
+resurrect the tutorial message mid-session.
+
+**Decision:** The hint's visibility is a one-way `hintDismissed` boolean,
+set once `tapCount` first reaches 3 and never cleared afterward. The counter
+and the hint share the same tap events but not the same piece of state, so
+resetting one doesn't affect the other.
+
+**Reversible?** Yes — it's one extra `useState` in `App.jsx`.
+
+---
+
 ### 2026-08-14 — Corner hold spawns an emoji too
 
 **Context:** The parent gesture lives in the top-left corner. The obvious

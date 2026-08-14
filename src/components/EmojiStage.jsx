@@ -20,7 +20,7 @@ const CORNER_SIZE = 64
 const HOLD_DURATION_MS = 2500
 const HOLD_MOVE_TOLERANCE = 20
 
-export default function EmojiStage({ onParentGesture }) {
+export default function EmojiStage({ onParentGesture, onTap }) {
   const [pops, setPops] = useState([])
   const nextId = useRef(0)
   const lastEmoji = useRef(undefined)
@@ -49,7 +49,8 @@ export default function EmojiStage({ onParentGesture }) {
 
     playPop()
     buzz()
-  }, [])
+    onTap?.()
+  }, [onTap])
 
   const remove = useCallback((id) => {
     setPops((current) => current.filter((pop) => pop.id !== id))
