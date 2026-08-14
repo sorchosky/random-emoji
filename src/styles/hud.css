@@ -1,11 +1,13 @@
 .onboarding-hint {
   position: absolute;
   top: max(24px, env(safe-area-inset-top));
-  left: 0;
-  right: 0;
+  /* Right edge leaves room for the tap counter so long text can't run
+     underneath it on narrow phone widths. */
+  left: max(16px, env(safe-area-inset-left));
+  right: calc(76px + max(16px, env(safe-area-inset-right)));
   margin: 0 auto;
   width: max-content;
-  max-width: calc(100% - 32px);
+  max-width: 100%;
   padding: 10px 20px;
   border-radius: 999px;
   background: var(--panel);

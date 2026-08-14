@@ -3,8 +3,7 @@
 @import './hud.css';
 
 :root {
-  --bg-top: #fef6e8;
-  --bg-bottom: #fbe6c4;
+  --bg: #fbeed9;
   --panel: #fffdf9;
   --panel-border: #e8d9bd;
   --text: #3a2a1a;
@@ -48,7 +47,14 @@ body {
 }
 
 body {
-  background: linear-gradient(170deg, var(--bg-top), var(--bg-bottom));
+  /*
+   * Flat, not a gradient: iOS Safari's translucent chrome tints itself from
+   * theme-color/manifest, which is one fixed color. A gradient body meant the
+   * chrome color only matched one end of it, showing as a visible seam where
+   * chrome met content. A flat color that exactly matches theme-color and the
+   * manifest is the only way to get a seamless edge.
+   */
+  background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }

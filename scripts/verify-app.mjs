@@ -104,7 +104,7 @@ count = await countEmoji()
 record('stage drains back to empty after the burst', count === 0, `saw ${count}`)
 
 // 4. Parent gesture: a brief corner tap must NOT open settings.
-await tapAt([{ x: 20, y: 20, pointerId: 40 }])
+await tapAt([{ x: 50, y: 20, pointerId: 40 }])
 await page.evaluate(() => {
   document.querySelector('[data-testid="stage"]').dispatchEvent(
     new PointerEvent('pointerup', { bubbles: true, pointerId: 40 }),
@@ -117,7 +117,7 @@ record('a quick corner tap does not open settings', settingsVisible === 0)
 await page.waitForTimeout(3000)
 
 // 5. Parent gesture: a sustained corner hold DOES open settings.
-await tapAt([{ x: 20, y: 20, pointerId: 41 }])
+await tapAt([{ x: 50, y: 20, pointerId: 41 }])
 await page.waitForTimeout(2900)
 settingsVisible = await page.locator('[data-testid="settings"]').count()
 record('a 2.5s corner hold opens settings', settingsVisible === 1)
