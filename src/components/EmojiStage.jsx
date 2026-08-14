@@ -16,11 +16,20 @@ const MAX_ON_SCREEN = 40
 
 // Parent gesture: a deliberate hold in the top-left corner. Sized and timed so
 // ordinary play never triggers it.
+//
+// The hold zone is inset from x: 0 rather than starting at the literal edge.
+// In a normal (non-standalone) Safari tab, the leftmost ~20-30px of the
+// screen is claimed by iOS's own edge-swipe-back gesture recognizer, which
+// sits above WebKit's content view — no DOM API can suppress it. A hold that
+// starts inside that strip can lose the touch to iOS mid-hold, which arrives
+// here as a silent pointercancel that aborts the timer. Starting the zone
+// past that strip keeps the whole gesture inside WebKit's control.
+const CORNER_MARGIN = 24
 const CORNER_SIZE = 64
 const HOLD_DURATION_MS = 2500
 const HOLD_MOVE_TOLERANCE = 20
 
-export default function EmojiStage({ onParentGesture }) {
+export default function EmojiStage({ onParentGesture, onTap }) {
   const [pops, setPops] = useState([])
   const nextId = useRef(0)
   const lastEmoji = useRef(undefined)
@@ -49,7 +58,8 @@ export default function EmojiStage({ onParentGesture }) {
 
     playPop()
     buzz()
-  }, [])
+    onTap?.()
+  }, [onTap])
 
   const remove = useCallback((id) => {
     setPops((current) => current.filter((pop) => pop.id !== id))
@@ -69,7 +79,11 @@ export default function EmojiStage({ onParentGesture }) {
       unlockAudio()
       spawn(event.clientX, event.clientY)
 
-      if (event.clientX <= CORNER_SIZE && event.clientY <= CORNER_SIZE) {
+      if (
+        event.clientX >= CORNER_MARGIN &&
+        event.clientX <= CORNER_MARGIN + CORNER_SIZE &&
+        event.clientY <= CORNER_SIZE
+      ) {
         cancelHold()
         holdRef.current = {
           pointerId: event.pointerId,

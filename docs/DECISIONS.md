@@ -7,6 +7,96 @@
 
 ---
 
+### 2026-08-14 — Corner-hold zone inset from the screen edge
+
+**Context:** A real-device test on an iPhone (Safari, normal tab, not
+installed to home screen) reported the top-left corner hold not opening
+Settings. Code review found nothing wrong with the timer/coordinate logic
+itself. The best-supported hypothesis: `CORNER_SIZE` started the hold-arming
+zone at `x: 0`, which overlaps the leftmost ~20-30px strip iOS Safari
+reserves for its own edge-swipe-back gesture — a system-level recognizer
+above WebKit's content view that no DOM API (`touch-action`,
+`preventDefault`) can suppress. A hold that starts inside that strip can lose
+the touch to iOS mid-gesture, which arrives in the page as a silent
+`pointercancel` — wired to the same `cancelHold()` path as an ordinary
+lift-off, so the timer aborts with no visible sign anything went wrong.
+
+**Decision:** Added `CORNER_MARGIN = 24`; the hold now only arms for touches
+with `clientX` between `CORNER_MARGIN` and `CORNER_MARGIN + CORNER_SIZE`,
+keeping the whole gesture inside the region WebKit fully controls. Ordinary
+taps anywhere, including in that margin strip, are unaffected — they still
+spawn an emoji exactly as before; only which touches can *arm the hold timer*
+changed.
+
+**Caveat:** This is a hypothesis-driven fix, not a confirmed one.
+`scripts/verify-app.mjs` dispatches synthetic `PointerEvent`s directly into
+the DOM, which bypasses OS-level gesture recognizers entirely — it will
+report PASS regardless of whether this actually fixes the real-device
+behavior. Only a real-device retest confirms it. If the hold still doesn't
+work after this, the next things to try are a larger margin or moving the
+gesture off the screen edge entirely (e.g. a fixed on-screen zone that isn't
+corner-anchored).
+
+**Reversible?** Yes — one constant and one condition.
+
+---
+
+### 2026-08-14 — Flat background color, not a gradient
+
+**Context:** `theme-color` (and the manifest's matching fields) tint iOS
+Safari's translucent chrome from a single color. The body background was a
+two-stop gradient (`--bg-top` → `--bg-bottom`), so the chrome color only
+matched one end of the page — the other edge showed a visible seam between
+Safari's flat-tinted chrome and the page's actual (different) color there.
+
+**Decision:** Collapsed the gradient into a single flat `--bg` token, and set
+`theme-color` plus the manifest's `background_color`/`theme_color` to that
+exact hex, so chrome and content are the same color at every edge, not just
+one.
+
+**Reversible?** Yes, but re-adding a gradient means picking a new
+`theme-color` compromise (or accepting a seam at whichever edge doesn't
+match).
+
+---
+
+### 2026-08-14 — Tap counter reset lives in Settings, not on the chip
+
+**Context:** The tap counter (top-right) needed a reset control. The obvious
+place is a long-press directly on the counter chip itself, but that's a
+gesture a curious toddler will find by accident within a normal play session
+— the opposite of "tamper-proof."
+
+**Decision:** The chip is display-only, with no pointer handlers of its own.
+Reset is a button inside `SettingsPanel`, which is already gated behind the
+2.5s top-left corner hold. Resetting the counter now takes the same
+deliberate parent gesture as changing sound/haptics settings.
+
+**Alternatives considered:** A long-press on the chip — rejected, not
+toddler-proof. A separate corner-hold zone just for reset — rejected as
+needless complexity when Settings already exists as the parent-only surface.
+
+**Reversible?** Yes — the reset button and its handler are self-contained.
+
+---
+
+### 2026-08-14 — Onboarding hint's dismissal is a separate flag from the tap counter
+
+**Context:** The onboarding hint ("Tap anywhere to make an emoji") needed to
+fade after 3 taps. The simplest implementation drove both the hint and the
+visible counter off the same `tapCount` state — but that means a parent
+resetting the counter in Settings would also reset `tapCount` below 3 and
+resurrect the tutorial message mid-session.
+
+**Decision:** The hint's visibility is a one-way `hintDismissed` boolean,
+set once `tapCount` first reaches 3 and never cleared afterward. The counter
+and the hint share the same tap events but not the same piece of state, so
+resetting one doesn't affect the other.
+
+**Reversible?** Yes — it's one extra `useState` in `App.jsx`.
+
+---
+
 ### 2026-08-14 — Corner hold spawns an emoji too
 
 **Context:** The parent gesture lives in the top-left corner. The obvious

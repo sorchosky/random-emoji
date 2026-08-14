@@ -1,17 +1,17 @@
 @import './emoji.css';
 @import './settings.css';
+@import './hud.css';
 
 :root {
-  --bg-top: #2b1a5e;
-  --bg-bottom: #12081f;
-  --panel: #241546;
-  --panel-border: #4a3585;
-  --text: #f4efff;
-  --text-dim: #b6a8dc;
-  --accent: #ffb340;
-  --focus: #7fd4ff;
+  --bg: #fbeed9;
+  --panel: #fffdf9;
+  --panel-border: #e8d9bd;
+  --text: #3a2a1a;
+  --text-dim: #8a7860;
+  --accent: #ff9d42;
+  --focus: #2f6fed;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *,
@@ -47,7 +47,14 @@ body {
 }
 
 body {
-  background: linear-gradient(170deg, var(--bg-top), var(--bg-bottom));
+  /*
+   * Flat, not a gradient: iOS Safari's translucent chrome tints itself from
+   * theme-color/manifest, which is one fixed color. A gradient body meant the
+   * chrome color only matched one end of it, showing as a visible seam where
+   * chrome met content. A flat color that exactly matches theme-color and the
+   * manifest is the only way to get a seamless edge.
+   */
+  background: var(--bg);
   color: var(--text);
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
