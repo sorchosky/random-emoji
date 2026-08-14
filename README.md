@@ -1,68 +1,76 @@
-# vibe-scaffold
+# Emoji Pop
 
-Reusable starting point for new vibe-code projects (Trip Up, Aviary,
-child care app, water table, and whatever's next). Speak a PRD, let
-Claude Code build against it in dedicated worktrees, check in at the
-milestones — not on every keystroke.
+Tap anywhere and a random emoji pops up under your finger, holds for a couple of
+seconds, and floats away. That's the whole app.
 
-## One-time setup
+Built for a toddler on an iPad, in the spirit of [tinyfingers.net](https://tinyfingers.net):
+one surface, one gesture, no menus, and no way to accidentally end up in Safari.
 
-1. Push this repo to GitHub.
-2. Mark it as a **template repository**: repo Settings → check "Template repository."
-   Now every new project starts with a green "Use this template" button on
-   GitHub, or you can run `scripts/init-project.sh` locally — same result,
-   pick whichever fits the moment.
+## What it does
 
-## Starting a new project
+- **Tap anywhere** → a random emoji appears exactly where you touched
+- **Every finger counts** — ten fingers at once means ten emoji, each fading on
+  its own schedule
+- **A soft musical pop** per emoji, pitched from a pentatonic scale so a
+  fistful of simultaneous taps lands as a chord instead of a mess
+- **A light buzz** on devices that support vibration
+- **Locked down** — no zoom, no pull-to-refresh, no long-press menus, and no
+  browser chrome when launched from the home screen
 
-```bash
-cd ~/code   # wherever your projects live
-~/code/vibe-scaffold/scripts/init-project.sh <project-name>
-```
-
-This copies `CLAUDE.md`, `.claude/settings.json`, `vercel.json`, and the
-`docs/` templates into a fresh directory, scaffolds a Vite React app, and
-makes the first commit.
-
-Then:
-1. **Talk through the PRD out loud**, then fill in `docs/PRD.md`. This is the
-   single highest-leverage step — a vague PRD produces a vague, over-permissive
-   build. Don't let Claude fill it in for you; it should be your voice.
-2. Fill in `docs/ARCHITECTURE.md` if the stack deviates from the React/Vite/Vercel
-   default.
-3. `git remote add origin <new-github-repo>` and push `main`.
-4. Connect the repo in Vercel. `main` auto-deploys to production, every
-   branch/PR gets a preview URL — nothing extra to configure.
-5. Start Claude Code in the project root, let it read `CLAUDE.md` + `docs/`,
-   confirm the plan, then let it run.
-
-## Starting a new feature
+## Running it
 
 ```bash
-scripts/new-feature.sh <feature-slug>
+npm install
+npm run dev
 ```
 
-Creates a sibling worktree (`../<project>-worktrees/<slug>`) on branch
-`feature/<slug>`, cut from latest `main`. Work there — including running
-Claude Code there — without disturbing `main` or other in-flight features.
-Squash-merge via PR when it's done, then `git worktree remove` to clean up.
-
-## Files in this template
-
-| File | Purpose |
+| Command | What it does |
 |---|---|
-| `CLAUDE.md` | The agent contract. Copied as-is into every project — this is what defines autonomy boundaries and check-in cadence. |
-| `docs/PRD_TEMPLATE.md` | Becomes `docs/PRD.md` per project. What you're building and why. |
-| `docs/ARCHITECTURE_TEMPLATE.md` | Becomes `docs/ARCHITECTURE.md`. Stack and data model calls. |
-| `docs/DECISIONS_LOG_TEMPLATE.md` | Becomes `docs/DECISIONS.md`. Append-only log of judgment calls made mid-build. |
-| `.claude/settings.json` | Claude Code permission rules — what it can do without asking vs. what requires a human in the loop. Verify against current Claude Code docs periodically; the permission schema evolves. |
-| `scripts/init-project.sh` | Scaffolds a new project from this template. |
-| `scripts/new-feature.sh` | Creates a worktree + branch for a new feature. |
-| `vercel.json` | Deploy defaults for a Vite app. |
+| `npm run dev` | Dev server |
+| `npm run build` | Production build to `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm test` | Vitest — emoji dataset invariants |
+| `node scripts/verify-app.mjs` | Playwright end-to-end checks (needs `npm run preview` running) |
 
-## Evolving this template
+## Putting it on the iPad
 
-When something learned on one project should apply to all future ones —
-a CLAUDE.md rule that would've prevented a bad call, a script tweak — change
-it here, not just in the live project. That's the whole point of a template:
-it should get better every time you use it.
+Deploy to Vercel (`main` auto-deploys, every branch gets a preview URL), then on
+the iPad: open the URL in Safari → Share → **Add to Home Screen**. Launching
+from that icon is what removes the browser chrome — opening it in a normal
+Safari tab still works, but she can tap her way out of it.
+
+## Settings
+
+Hold the **top-left corner for 2.5 seconds** to open the grown-up panel — sound
+and vibration toggles, and that's it. It's a deliberate hold rather than a
+button so a child doesn't find it by accident. A normal tap in that corner still
+pops an emoji like anywhere else.
+
+## Adding emoji
+
+Add to the right category in `src/data/emoji.js`, then run `npm test`. The suite
+enforces the two rules that keep emoji from rendering badly on an older iPad:
+every entry must be a **single grapheme cluster** (no ZWJ sequences, skin-tone
+modifiers, or flags) and **nothing newer than Unicode 12.0**. It also blocks the
+obvious not-for-kids categories.
+
+## Working on it
+
+The build is organized as a ticket queue in [`docs/TICKETS.md`](docs/TICKETS.md).
+`scripts/run-tickets.sh` reads that queue and drives Claude Code through the
+unchecked tickets unattended — one at a time, gated on build and tests, with a
+commit per ticket. A ticket that fails the gate stops the run with its box still
+unchecked, so nothing half-finished gets marked done.
+
+```bash
+scripts/new-feature.sh <slug>     # worktree + branch, cut from latest main
+cd ../random-emoji-worktrees/<slug>
+npm install
+scripts/run-tickets.sh --dry-run  # show the next ticket's prompt, invoke nothing
+scripts/run-tickets.sh            # run the queue
+```
+
+Context for the agent lives in [`docs/PRD.md`](docs/PRD.md),
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), and
+[`docs/DECISIONS.md`](docs/DECISIONS.md). `CLAUDE.md` is the agent contract —
+what it can do without asking, and where it has to stop and check in.
