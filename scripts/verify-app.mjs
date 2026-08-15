@@ -8,6 +8,7 @@
 // Set CHROMIUM_PATH if Playwright's bundled browser isn't installed.
 
 import { chromium } from 'playwright'
+import { EMOJI_CATEGORIES } from '../src/data/emoji.js'
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:4173'
 const MAX_ON_SCREEN = 40
@@ -103,8 +104,12 @@ await page.waitForTimeout(3400)
 count = await countEmoji()
 record('stage drains back to empty after the burst', count === 0, `saw ${count}`)
 
+// The hold zone lives in the top-right now, mirroring the visible menu button.
+const { width: viewportWidth } = page.viewportSize()
+const cornerX = viewportWidth - 50
+
 // 4. Parent gesture: a brief corner tap must NOT open settings.
-await tapAt([{ x: 50, y: 20, pointerId: 40 }])
+await tapAt([{ x: cornerX, y: 20, pointerId: 40 }])
 await page.evaluate(() => {
   document.querySelector('[data-testid="stage"]').dispatchEvent(
     new PointerEvent('pointerup', { bubbles: true, pointerId: 40 }),
@@ -117,17 +122,53 @@ record('a quick corner tap does not open settings', settingsVisible === 0)
 await page.waitForTimeout(3000)
 
 // 5. Parent gesture: a sustained corner hold DOES open settings.
-await tapAt([{ x: 50, y: 20, pointerId: 41 }])
+await tapAt([{ x: cornerX, y: 20, pointerId: 41 }])
 await page.waitForTimeout(2900)
 settingsVisible = await page.locator('[data-testid="settings"]').count()
 record('a 2.5s corner hold opens settings', settingsVisible === 1)
 
-// 6. Settings persist across a reload.
 if (settingsVisible === 1) {
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(150)
+  settingsVisible = await page.locator('[data-testid="settings"]').count()
+  record('Escape closes the settings panel', settingsVisible === 0)
+}
+
+// 6. The visible menu button also opens settings.
+await page.locator('.menu-button').click()
+await page.waitForTimeout(150)
+settingsVisible = await page.locator('[data-testid="settings"]').count()
+record('the menu button opens settings', settingsVisible === 1)
+
+// 7. Deselecting every category disables the primary button and blocks Esc.
+if (settingsVisible === 1) {
+  await page.getByRole('button', { name: 'Deselect all', exact: true }).click()
+  await page.waitForTimeout(50)
+  const closeDisabled = await page.locator('.settings__close').isDisabled()
+  record('deselecting every category disables the primary button', closeDisabled)
+
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(150)
+  settingsVisible = await page.locator('[data-testid="settings"]').count()
+  record('Escape does not close with zero categories selected', settingsVisible === 1)
+
+  // 8. Selecting only Food and committing narrows what spawns.
+  await page.locator('.category-chip', { hasText: 'Food' }).click()
+  await page.waitForTimeout(50)
   await page.locator('.toggle__input').first().uncheck({ force: true })
-  await page.waitForTimeout(100)
+  await page.waitForTimeout(50)
+  await page.locator('.settings__close').click()
+  await page.waitForTimeout(150)
+  settingsVisible = await page.locator('[data-testid="settings"]').count()
+  record('the primary button closes settings once a category is selected', settingsVisible === 0)
+
   const stored = await page.evaluate(() =>
     localStorage.getItem('emoji-pop:settings'),
+  )
+  record(
+    'category selection persists to localStorage',
+    stored?.includes('"categories":["food"]') ?? false,
+    stored ?? 'nothing stored',
   )
   record(
     'sound toggle persists to localStorage',
@@ -135,13 +176,36 @@ if (settingsVisible === 1) {
     stored ?? 'nothing stored',
   )
 
-  await page.keyboard.press('Escape')
+  await page.waitForTimeout(3200)
+  const spawned = new Set()
+  for (let i = 0; i < 20; i++) {
+    await tapAt([{ x: 200 + i, y: 300, pointerId: 100 + i }])
+    await page.waitForTimeout(20)
+  }
+  const glyphs = await page.locator('.emoji__glyph').allTextContents()
+  glyphs.forEach((g) => spawned.add(g))
+  const outOfPool = [...spawned].filter((g) => !EMOJI_CATEGORIES.food.includes(g))
+  record(
+    '20 taps with only Food selected spawn only food emoji',
+    outOfPool.length === 0,
+    outOfPool.join(' '),
+  )
+
+  // Restore every category so later checks aren't left running on a narrowed pool.
+  await page.locator('.menu-button').click()
   await page.waitForTimeout(150)
-  settingsVisible = await page.locator('[data-testid="settings"]').count()
-  record('Escape closes the settings panel', settingsVisible === 0)
+  await page.getByRole('button', { name: 'Select all', exact: true }).click()
+  await page.waitForTimeout(50)
+  await page.locator('.settings__close').click()
+  await page.waitForTimeout(150)
+
+  // Closing returns focus to the menu button that reopened it — correct, since
+  // EmojiStage deliberately ignores Space/Enter while a real control has focus.
+  // Blur it so the next check exercises the ordinary "nothing focused" case.
+  await page.evaluate(() => document.activeElement.blur())
 }
 
-// 7. Keyboard spawns an emoji.
+// 9. Keyboard spawns an emoji.
 await page.waitForTimeout(3200)
 await page.keyboard.press('Space')
 await page.waitForTimeout(150)

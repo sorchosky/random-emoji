@@ -3,6 +3,7 @@ import EmojiStage from './components/EmojiStage.jsx'
 import SettingsPanel from './components/SettingsPanel.jsx'
 import OnboardingHint from './components/OnboardingHint.jsx'
 import TapCounter from './components/TapCounter.jsx'
+import MenuButton from './components/MenuButton.jsx'
 import {
   getSettings,
   setSetting,
@@ -28,8 +29,11 @@ export default function App() {
   return (
     <>
       <EmojiStage onParentGesture={() => setSettingsOpen(true)} onTap={handleTap} />
-      <OnboardingHint dismissed={hintDismissed} />
-      <TapCounter count={tapCount} />
+      <div className="hud">
+        <TapCounter count={tapCount} />
+        <OnboardingHint dismissed={hintDismissed} />
+      </div>
+      <MenuButton onOpen={() => setSettingsOpen(true)} />
       {settingsOpen ? (
         <SettingsPanel
           settings={settings}

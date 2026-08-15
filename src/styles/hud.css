@@ -1,22 +1,46 @@
-.onboarding-hint {
+/*
+ * The HUD is deliberately container-less: no cards, no pills, just type sitting
+ * directly on the background. The stage is the app, and two floating panels
+ * competing for the top of it read as chrome.
+ *
+ * Counter and hint share one flex row so `align-items: baseline` can do its
+ * job — the two sit at different sizes but on a single typographic baseline,
+ * which is what makes an unboxed pairing look intentional rather than stacked.
+ */
+.hud {
   position: absolute;
-  top: max(24px, env(safe-area-inset-top));
-  /* Right edge leaves room for the tap counter so long text can't run
-     underneath it on narrow phone widths. */
+  top: max(16px, env(safe-area-inset-top));
   left: max(16px, env(safe-area-inset-left));
-  right: calc(76px + max(16px, env(safe-area-inset-right)));
-  margin: 0 auto;
-  width: max-content;
-  max-width: 100%;
-  padding: 10px 20px;
-  border-radius: 999px;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
+  /* Reserve the top-right corner for the menu button. */
+  right: calc(64px + max(16px, env(safe-area-inset-right)));
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  min-width: 0;
+  /* Taps fall through to the stage — neither element is a target. */
+  pointer-events: none;
+}
+
+.tap-counter {
+  flex: none;
   color: var(--text);
+  font-size: 1.5rem;
+  font-weight: 700;
+  /* Fixed-width digits, so the number doesn't shuffle the hint sideways as it
+     climbs from 9 to 10 to 100. */
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.onboarding-hint {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-dim);
   font-size: 1rem;
   font-weight: 600;
-  text-align: center;
-  pointer-events: none;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   opacity: 1;
   transition: opacity 600ms ease;
 }
@@ -25,27 +49,38 @@
   opacity: 0;
 }
 
+/*
+ * Menu button. An inline SVG rather than an emoji glyph on purpose: the whole
+ * app is built around the fact that this device's emoji rendering can't be
+ * trusted, and a control that might tofu-box is a control that might strand a
+ * parent outside settings.
+ */
+.menu-button {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: max(16px, env(safe-area-inset-right));
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 50%;
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.menu-button:active {
+  transform: translateY(1px);
+}
+
+.menu-button svg {
+  display: block;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .onboarding-hint {
     transition: none;
   }
-}
-
-.tap-counter {
-  position: absolute;
-  top: max(16px, env(safe-area-inset-top));
-  right: max(16px, env(safe-area-inset-right));
-  min-width: 44px;
-  min-height: 44px;
-  display: grid;
-  place-items: center;
-  padding: 0 12px;
-  border-radius: 999px;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  color: var(--text);
-  font-size: 1.0625rem;
-  font-weight: 650;
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
 }

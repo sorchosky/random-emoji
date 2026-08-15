@@ -1,7 +1,10 @@
-import { useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { CATEGORY_KEYS, CATEGORY_META } from '../data/emoji.js'
 import { isHapticsSupported } from '../lib/haptics.js'
 
-const FOCUSABLE = 'button, [href], input, select, textarea, [tabindex]'
+// :not([disabled]) matters once the primary button can be disabled — an
+// unfocusable node in this list would dead-end Tab at the last real control.
+const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]'
 
 /**
  * Parent-facing settings. This is the one surface a grown-up actually reads, so
@@ -17,6 +20,30 @@ export default function SettingsPanel({
   const panelRef = useRef(null)
   const previouslyFocused = useRef(null)
 
+  // Category selection is staged locally and only written to the store when
+  // the panel closes — sound/haptics stay immediate, writing through `onChange`
+  // as they always have.
+  const [staged, setStaged] = useState(settings.categories)
+  const stagedRef = useRef(staged)
+  stagedRef.current = staged
+
+  const toggleCategory = useCallback((key) => {
+    setStaged((current) =>
+      current.includes(key)
+        ? current.filter((existing) => existing !== key)
+        : [...current, key],
+    )
+  }, [])
+
+  // A committed empty selection would leave taps producing nothing with no
+  // visible explanation, so it's a no-op instead: the primary button disables,
+  // Esc and the backdrop tap both fall through to this same guard.
+  const commitAndClose = useCallback(() => {
+    if (stagedRef.current.length === 0) return
+    onChange('categories', stagedRef.current)
+    onClose()
+  }, [onChange, onClose])
+
   useEffect(() => {
     previouslyFocused.current = document.activeElement
     const panel = panelRef.current
@@ -25,7 +52,7 @@ export default function SettingsPanel({
     const onKeyDown = (event) => {
       if (event.key === 'Escape') {
         event.preventDefault()
-        onClose()
+        commitAndClose()
         return
       }
       if (event.key !== 'Tab' || !panel) return
@@ -49,7 +76,9 @@ export default function SettingsPanel({
       document.removeEventListener('keydown', onKeyDown)
       previouslyFocused.current?.focus?.()
     }
-  }, [onClose])
+  }, [commitAndClose])
+
+  const canClose = staged.length > 0
 
   return (
     <div
@@ -58,7 +87,7 @@ export default function SettingsPanel({
       onPointerDown={(event) => {
         // Only a tap on the backdrop itself closes — not one that bubbled up
         // from inside the panel.
-        if (event.target === event.currentTarget) onClose()
+        if (event.target === event.currentTarget) commitAndClose()
       }}
     >
       <div
@@ -73,6 +102,42 @@ export default function SettingsPanel({
         <h1 className="settings__title" id="settings-title">
           Grown-up settings
         </h1>
+
+        <section className="settings__section" aria-labelledby="categories-title">
+          <div className="settings__section-header">
+            <h2 className="settings__section-title" id="categories-title">
+              Emoji groups
+            </h2>
+            <div className="settings__bulk-actions">
+              <button
+                type="button"
+                className="settings__bulk-button"
+                onClick={() => setStaged(CATEGORY_KEYS)}
+              >
+                Select all
+              </button>
+              <button
+                type="button"
+                className="settings__bulk-button"
+                onClick={() => setStaged([])}
+              >
+                Deselect all
+              </button>
+            </div>
+          </div>
+
+          <div className="category-grid" role="group" aria-labelledby="categories-title">
+            {CATEGORY_KEYS.map((key) => (
+              <CategoryChip
+                key={key}
+                label={CATEGORY_META[key].label}
+                sample={CATEGORY_META[key].sample}
+                selected={staged.includes(key)}
+                onToggle={() => toggleCategory(key)}
+              />
+            ))}
+          </div>
+        </section>
 
         <Toggle
           label="Pop sound"
@@ -100,15 +165,42 @@ export default function SettingsPanel({
           Reset tap counter
         </button>
 
-        <button className="settings__close" type="button" onClick={onClose}>
+        <button
+          className="settings__close"
+          type="button"
+          disabled={!canClose}
+          onClick={commitAndClose}
+        >
           Back to playing
         </button>
+        {canClose ? null : (
+          <p className="settings__warning" role="alert">
+            Pick at least one group to keep playing.
+          </p>
+        )}
 
         <p className="settings__hint">
-          Hold the top-left corner for 2.5 seconds to get back here.
+          Hold the top-right corner for 2.5 seconds to get back here.
         </p>
       </div>
     </div>
+  )
+}
+
+function CategoryChip({ label, sample, selected, onToggle }) {
+  return (
+    <button
+      type="button"
+      className="category-chip"
+      data-selected={selected || undefined}
+      aria-pressed={selected}
+      onClick={onToggle}
+    >
+      <span className="category-chip__sample" aria-hidden="true">
+        {sample}
+      </span>
+      <span className="category-chip__label">{label}</span>
+    </button>
   )
 }
 

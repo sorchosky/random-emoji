@@ -7,6 +7,107 @@
 
 ---
 
+### 2026-08-15 — HUD redesign: no chip containers, cool near-white palette
+
+**Context:** Owner-requested redesign. The tap counter and onboarding hint each
+drew their own `--panel` card, and were coupled by a magic number
+(`hud.css:7` reserved exactly `76px` for the counter chip so the hint's
+centered text couldn't run under it). The owner also wanted the counter moved
+to the top-left, the two elements baseline-aligned as a pair, and the warm
+cream palette (`#fbeed9` background, brown text, orange accent) replaced with
+a cool near-white one.
+
+**Decision:** Both chips lost their background/border/padding — they now sit
+directly on the page as plain text, in one flex row (`.hud`) with
+`align-items: baseline`, which is what makes the differently-sized counter and
+hint read as a pair without a container. The palette tokens in
+`index.css` moved to cool neutrals (`--bg: #f2f5f9`, `--panel: #ffffff`,
+`--text: #1e2732`, `--text-dim: #64748b`); `--accent` (`#ff9d42`) and `--focus`
+were kept unchanged; the accent is now the one warm signal in an otherwise
+cool UI.
+
+`--bg` is duplicated in `index.html`'s `theme-color` and in
+`public/manifest.webmanifest`'s `background_color`/`theme_color` — see the
+2026-08-14 flat-background entry below for why. All three were updated
+together to keep iOS Safari's chrome tint matching the page.
+
+**Reversible?** Yes — CSS tokens and one rewritten stylesheet.
+
+---
+
+### 2026-08-15 — Visible menu button added; corner hold mirrored to top-right
+
+**Context:** The owner asked for a visible menu button (top-right) that opens
+Settings, alongside the existing hidden 2.5s corner-hold gesture
+(`EmojiStage.jsx`, originally top-left). PRD.md's success criteria promise the
+settings surface is "nothing a child would find by accident"
+(`docs/PRD.md`) — a visible button softens that promise, but it's what was
+asked for, and the owner confirmed keeping the hold as a second entrance
+rather than replacing it.
+
+**Decision:** Added `MenuButton.jsx` in the top-right. Rather than leaving the
+hidden hold in the top-left (now two unrelated corners for one feature), the
+hold's arming zone was mirrored to the top-right so both entrances live in the
+same corner. The zone's inset-from-the-edge logic (`CORNER_MARGIN`) is
+unchanged in spirit — it now dodges iOS's right-edge forward-swipe recognizer
+instead of the left-edge back-swipe one, for the same reason (see the
+2026-08-14 corner-hold entry).
+
+The tap counter took the top-left corner the hold vacated.
+
+**Alternatives considered:** Leaving the hold in the top-left, menu button in
+the top-right — rejected as two unrelated corners doing adjacent jobs, with no
+benefit over sharing one. Dropping the hold entirely now that a visible button
+exists — rejected; the owner explicitly asked to keep both.
+
+**Reversible?** Yes — the arming-zone math and the counter's CSS position are
+each self-contained.
+
+---
+
+### 2026-08-15 — Parent-only emoji category picker, staged until the menu closes
+
+**Context:** The owner asked for a multi-select category picker in Settings so
+a parent can narrow which emoji groups appear when tapping. `docs/PRD.md`
+explicitly lists "Emoji categories or themes the child picks between" as out
+of scope, on the grounds that "choice is friction" in the core loop. This
+request is narrower than what that line rules out — it's a parent-only control
+behind the existing corner-hold/menu-button gate, set once and left alone,
+not a child-facing switcher — but it's still a direct reversal of a written
+scope line, done on explicit owner instruction. `docs/PRD.md` was updated to
+carve out the exception rather than silently ignoring it.
+
+**Decision:** `EMOJI_CATEGORIES` (`src/data/emoji.js`) already had the right
+shape — no data changes needed beyond adding `CATEGORY_META` for
+display labels and a memoized `emojiForCategories()` to flatten a selection.
+`pickRandomEmoji` gained an optional `pool` parameter (default: everything) so
+`EmojiStage` can draw from the narrowed set without changing its no-repeat
+behavior.
+
+Selection is staged in local component state inside `SettingsPanel` and only
+written to the settings store when the panel closes — sound and haptics kept
+their existing immediate-write behavior, since only the category picker was
+asked to work this way ("change goes into effect when the menu closes"). All
+three exits (the primary button, Esc, and a backdrop tap) route through one
+`commitAndClose()`.
+
+A committed empty selection would leave taps producing nothing with no visible
+explanation, so it's blocked rather than allowed: the primary button disables
+at zero selected with an inline hint, and Esc/backdrop-tap fall through the
+same guard. This was an explicit owner choice among three options (disable,
+silently fall back to all categories, or allow the dead state).
+
+**Alternatives considered:** Writing category changes immediately, like sound
+and haptics — rejected, the owner specifically asked for a commit-on-close
+gesture with a large confirmation button. Silently re-enabling all categories
+on an empty commit — rejected as a UI that lies about what was just chosen.
+
+**Reversible?** Yes — the staging state and the guard are localized to
+`SettingsPanel`; reverting to immediate writes means removing the local
+`staged` state and calling `onChange` directly from each chip.
+
+---
+
 ### 2026-08-14 — Corner-hold zone inset from the screen edge
 
 **Context:** A real-device test on an iPhone (Safari, normal tab, not

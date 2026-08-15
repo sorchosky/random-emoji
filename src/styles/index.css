@@ -2,12 +2,20 @@
 @import './settings.css';
 @import './hud.css';
 
+/*
+ * Cool near-white neutrals with one warm accent. The emoji themselves are the
+ * only saturated thing on screen, so the ground stays quiet and the orange is
+ * reserved for the primary action.
+ *
+ * --bg is duplicated in index.html's theme-color and in the manifest's
+ * background_color/theme_color. Change all three together — see DECISIONS.md.
+ */
 :root {
-  --bg: #fbeed9;
-  --panel: #fffdf9;
-  --panel-border: #e8d9bd;
-  --text: #3a2a1a;
-  --text-dim: #8a7860;
+  --bg: #f2f5f9;
+  --panel: #ffffff;
+  --panel-border: #d8e0ea;
+  --text: #1e2732;
+  --text-dim: #64748b;
   --accent: #ff9d42;
   --focus: #2f6fed;
 
