@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { CATEGORY_KEYS, CATEGORY_META } from '../data/emoji.js'
-import { isHapticsSupported } from '../lib/haptics.js'
 
 // :not([disabled]) matters once the primary button can be disabled — an
 // unfocusable node in this list would dead-end Tab at the last real control.
@@ -21,8 +20,7 @@ export default function SettingsPanel({
   const previouslyFocused = useRef(null)
 
   // Category selection is staged locally and only written to the store when
-  // the panel closes — sound/haptics stay immediate, writing through `onChange`
-  // as they always have.
+  // the panel closes.
   const [staged, setStaged] = useState(settings.categories)
   const stagedRef = useRef(staged)
   stagedRef.current = staged
@@ -139,24 +137,6 @@ export default function SettingsPanel({
           </div>
         </section>
 
-        <Toggle
-          label="Pop sound"
-          checked={settings.sound}
-          onChange={(value) => onChange('sound', value)}
-        />
-
-        <Toggle
-          label="Vibration"
-          checked={settings.haptics}
-          disabled={!isHapticsSupported()}
-          hint={
-            isHapticsSupported()
-              ? undefined
-              : 'Not supported on this device'
-          }
-          onChange={(value) => onChange('haptics', value)}
-        />
-
         <button
           className="settings__reset"
           type="button"
@@ -178,10 +158,6 @@ export default function SettingsPanel({
             Pick at least one group to keep playing.
           </p>
         )}
-
-        <p className="settings__hint">
-          Hold the top-right corner for 2.5 seconds to get back here.
-        </p>
       </div>
     </div>
   )
@@ -201,26 +177,5 @@ function CategoryChip({ label, sample, selected, onToggle }) {
       </span>
       <span className="category-chip__label">{label}</span>
     </button>
-  )
-}
-
-function Toggle({ label, checked, onChange, disabled, hint }) {
-  return (
-    <label className="toggle" data-disabled={disabled || undefined}>
-      <span className="toggle__label">
-        {label}
-        {hint ? <span className="toggle__hint">{hint}</span> : null}
-      </span>
-      <input
-        className="toggle__input"
-        type="checkbox"
-        checked={checked}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.checked)}
-      />
-      <span className="toggle__track" aria-hidden="true">
-        <span className="toggle__thumb" />
-      </span>
-    </label>
   )
 }

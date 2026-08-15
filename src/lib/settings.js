@@ -1,16 +1,14 @@
 // Tiny localStorage-backed settings store.
 //
-// Deliberately not React state at the top of the tree: the audio and haptics
-// modules read these on every tap, and threading props down for something a
-// parent changes once a month isn't worth the re-renders.
+// Deliberately not React state at the top of the tree: EmojiStage reads this
+// on every tap, and threading props down for something a parent changes once
+// a month isn't worth the re-renders.
 
 import { CATEGORY_KEYS } from '../data/emoji.js'
 
 const STORAGE_KEY = 'emoji-pop:settings'
 
 const DEFAULTS = {
-  sound: true,
-  haptics: true,
   // Which emoji groups are in play. Everything, until a parent narrows it.
   categories: CATEGORY_KEYS,
 }
@@ -54,9 +52,6 @@ function readCategories(value) {
 const stored = safeRead()
 if (stored) {
   current = {
-    sound: typeof stored.sound === 'boolean' ? stored.sound : DEFAULTS.sound,
-    haptics:
-      typeof stored.haptics === 'boolean' ? stored.haptics : DEFAULTS.haptics,
     categories: readCategories(stored.categories),
   }
 }

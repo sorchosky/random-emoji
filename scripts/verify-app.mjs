@@ -155,8 +155,6 @@ if (settingsVisible === 1) {
   // 8. Selecting only Food and committing narrows what spawns.
   await page.locator('.category-chip', { hasText: 'Food' }).click()
   await page.waitForTimeout(50)
-  await page.locator('.toggle__input').first().uncheck({ force: true })
-  await page.waitForTimeout(50)
   await page.locator('.settings__close').click()
   await page.waitForTimeout(150)
   settingsVisible = await page.locator('[data-testid="settings"]').count()
@@ -168,11 +166,6 @@ if (settingsVisible === 1) {
   record(
     'category selection persists to localStorage',
     stored?.includes('"categories":["food"]') ?? false,
-    stored ?? 'nothing stored',
-  )
-  record(
-    'sound toggle persists to localStorage',
-    stored?.includes('"sound":false') ?? false,
     stored ?? 'nothing stored',
   )
 

@@ -1,7 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { emojiForCategories, pickRandomEmoji } from '../data/emoji.js'
-import { playPop, unlockAudio } from '../lib/audio.js'
-import { buzz } from '../lib/haptics.js'
 import { getSettings } from '../lib/settings.js'
 
 // Must stay in sync with the animation duration in emoji.css. The node removes
@@ -60,8 +58,6 @@ export default function EmojiStage({ onParentGesture, onTap }) {
       return [...next, pop]
     })
 
-    playPop()
-    buzz()
     onTap?.()
   }, [onTap])
 
@@ -78,9 +74,6 @@ export default function EmojiStage({ onParentGesture, onTap }) {
 
   const handlePointerDown = useCallback(
     (event) => {
-      // Every pointerdown is a real user gesture, which is the only moment iOS
-      // will let us start the AudioContext.
-      unlockAudio()
       spawn(event.clientX, event.clientY)
 
       if (
@@ -129,7 +122,6 @@ export default function EmojiStage({ onParentGesture, onTap }) {
       if (event.key !== ' ' && event.key !== 'Enter') return
       if (event.target.closest('[data-interactive]')) return
       event.preventDefault()
-      unlockAudio()
       spawn(
         window.innerWidth * (0.2 + Math.random() * 0.6),
         window.innerHeight * (0.2 + Math.random() * 0.6),

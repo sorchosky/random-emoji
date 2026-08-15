@@ -7,6 +7,63 @@
 
 ---
 
+### 2026-08-15 — Sound/haptics removed, shapes category added, hearts cleaned up, modal accent darkened
+
+**Context:** Owner-requested batch of changes: (1) the `hearts` category had
+drifted to include non-heart emoji (💕💫💥💦💤🔮🎏🎐) alongside real hearts;
+(2) a new `shapes` category was wanted; (3) the Settings modal's "hold the
+top-right corner for 2.5 seconds" hint text was redundant with the gesture
+itself and asked to be removed (the gesture stays — only the copy is gone);
+(4) the modal's accent-background surfaces (selected category chips, the
+"Back to playing" button) used dark-brown text (`#2b1400`) and the owner
+wanted white text there instead; (5) sound and vibration were cut entirely,
+including their settings fields, toggle UI, and library modules.
+
+For (1), the owner's requested heart list included 🩷 (pink heart), 🩵 (light
+blue heart), and 🩶 (grey heart) — all Unicode 15.0 (2022), newer than this
+project's documented "nothing past Unicode 12.0" rule in `emoji.js`, kept
+specifically to avoid blank tofu boxes on an un-updated iPad (see the
+2026-08-14 "Curated set capped at Unicode 12.0" entry below). Asked, the
+owner chose to drop those three and keep only the Unicode-≤12.0-safe hearts:
+`❤️🧡💛💚💙💜🖤🤍🤎`.
+
+For (4), raw `--accent` (`#ff9d42`) against white text is ~2.0:1 contrast,
+well under WCAG AA's 4.5:1 floor for normal text. `--accent` turned out to be
+referenced only inside `settings.css` (verified by grep — `MenuButton` and
+`TapCounter` don't use it), so it was safe to darken at the token definition
+in `index.css` without touching any other surface's appearance.
+
+**Decision:**
+- `hearts` in `emoji.js` is now exactly `❤️🧡💛💚💙💜🖤🤍🤎` (9 emoji).
+- A new `shapes` category was added: `🔴🟠🟡🔵🟣⚫️⚪️🟤🟧🟥🟨🟩🟦🟪⬛️⬜️🟫🔺🔻🔸🔹🔶🔷`
+  (22 emoji, all single-grapheme and ≤ Unicode 12.0), with a matching
+  `CATEGORY_META` entry.
+- The `settings__hint` paragraph and its CSS rule were deleted from
+  `SettingsPanel.jsx` / `settings.css`.
+- `--accent` moved from `#ff9d42` to `#a6662b` (contrast vs. white ≈ 4.6:1,
+  computed via the WCAG relative-luminance formula), and
+  `.category-chip[data-selected]` / `.settings__close` text moved from
+  `#2b1400` to `#fff`.
+- `src/lib/audio.js` and `src/lib/haptics.js` were deleted; their call sites
+  in `EmojiStage.jsx`, the `sound`/`haptics` fields in `settings.js`
+  (`DEFAULTS` and stored hydration), the two `<Toggle>` rows and the
+  now-unused `Toggle` component in `SettingsPanel.jsx`, and the matching
+  assertions in `scripts/verify-app.mjs` were all removed together. `PRD.md`
+  and `ARCHITECTURE.md` were updated to match — the Sound/Haptics scope items
+  are gone, and the `Settings` data model, decisions log, folder structure,
+  and "known constraints" sections no longer mention them.
+
+**Alternatives considered:** Including the three newer heart emoji as
+requested — rejected per owner's choice, given the explicit device-safety
+rule they'd conflict with. Leaving `--accent` unchanged and only lightening
+the modal text to something short of pure white — rejected; the owner asked
+for white text specifically, so the token had to move instead.
+
+**Reversible?** Yes — each change (emoji arrays, the accent token, the
+toggle UI, the audio/haptics modules) is independently self-contained.
+
+---
+
 ### 2026-08-15 — HUD redesign: no chip containers, cool near-white palette
 
 **Context:** Owner-requested redesign. The tap counter and onboarding hint each
