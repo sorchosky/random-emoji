@@ -67,9 +67,12 @@ export const EMOJI_CATEGORIES = {
     '🎳', '🪁', '🛹', '🎿', '⛸', '🧵', '🧶', '🔔', '💡', '🔦',
   ],
   hearts: [
-    '❤️', '🧡', '💛', '💚', '💙', '💜', '🤎', '🤍', '💕', '💞',
-    '💓', '💗', '💖', '💘', '💝', '💟', '💌', '💫', '💥', '💦',
-    '💤', '🔮', '🎏', '🎐',
+    '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎',
+  ],
+  shapes: [
+    '🔴', '🟠', '🟡', '🔵', '🟣', '⚫️', '⚪️', '🟤', '🟧', '🟥',
+    '🟨', '🟩', '🟦', '🟪', '⬛️', '⬜️', '🟫', '🔺', '🔻', '🔸',
+    '🔹', '🔶', '🔷',
   ],
 }
 
@@ -93,6 +96,7 @@ export const CATEGORY_META = {
   faces: { label: 'Faces', sample: '😀' },
   toys: { label: 'Toys', sample: '🎈' },
   hearts: { label: 'Hearts', sample: '❤️' },
+  shapes: { label: 'Shapes', sample: '🔴' },
 }
 
 // Memoized on the sorted key list. This runs on the tap hot path, and returning

@@ -35,21 +35,19 @@ That's the whole app. Everything else exists to protect that loop.
    render on the actual device.
 4. **Toddler lock-down.** No zoom, no pull-to-refresh, no text selection, no
    long-press menus, no browser chrome when launched from the home screen.
-5. **Sound.** A soft musical pop per emoji, mutable.
-6. **Haptics.** A light buzz per tap where the device supports it.
-7. **Parent gesture.** A deliberate hidden hold in the top-right corner opens
+5. **Parent gesture.** A deliberate hidden hold in the top-right corner opens
    settings; nothing a child would stumble into. A visible menu button in the
    same corner is a second, discoverable way in — see the note on that
    reversal below.
-8. **Onboarding hint.** "Tap anywhere to make an emoji" is shown on load and
+6. **Onboarding hint.** "Tap anywhere to make an emoji" is shown on load and
    fades away permanently after the third tap — a nudge for whoever hands the
    tablet over, gone before it becomes clutter.
-9. **Tap counter.** A running count of taps in the top-left corner. Resettable
+7. **Tap counter.** A running count of taps in the top-left corner. Resettable
    only from the Settings panel (behind the parent gesture) — not by any
    gesture a child could stumble into.
-10. **Emoji groups.** A parent can narrow the pool to specific categories
-    (animals, food, vehicles, nature, faces, toys, hearts) from the Settings
-    panel — see the note on that reversal below.
+8. **Emoji groups.** A parent can narrow the pool to specific categories
+   (animals, food, vehicles, nature, faces, toys, hearts, shapes) from the
+   Settings panel — see the note on that reversal below.
 
 ## Explicitly out of scope
 
@@ -57,7 +55,7 @@ That's the whole app. Everything else exists to protect that loop.
 - Scores, levels, progress, streaks, or any reason to keep playing
 - Emoji categories or themes the *child* picks between mid-play — choice is
   friction in the core loop. (A *parent* narrowing the pool ahead of time,
-  from Settings, is now in scope — see item 10 and `DECISIONS.md`.)
+  from Settings, is now in scope — see item 8 and `DECISIONS.md`.)
 - Analytics or any network call at runtime
 - Offline service worker (the app is tiny and the tablet is on home wifi;
   revisit only if it actually gets used away from the house)

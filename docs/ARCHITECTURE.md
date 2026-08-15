@@ -10,8 +10,8 @@
 - **State management:** `useState` inside `EmojiStage`, plus a hand-rolled
   subscribe store in `src/lib/settings.js`. No Zustand, no context.
 - **External APIs:** none. No network calls at runtime.
-- **Data/persistence:** `localStorage`, for two booleans and one array of
-  enabled emoji-category keys.
+- **Data/persistence:** `localStorage`, for one array of enabled
+  emoji-category keys.
 - **Testing:** Vitest for the emoji dataset; Playwright (`scripts/verify-app.mjs`)
   for the interaction behavior unit tests can't reach.
 
@@ -29,8 +29,6 @@ Pop            // one emoji currently on screen, lives ~2.65s then is dropped
   bornAt       number, epoch ms — only used by the cleanup sweep
 
 Settings       // persisted to localStorage under "emoji-pop:settings"
-  sound        boolean
-  haptics      boolean
   categories   string[], subset of EMOJI_CATEGORIES keys — what pops on tap
 ```
 
@@ -43,27 +41,21 @@ Settings       // persisted to localStorage under "emoji-pop:settings"
   animating only `transform` and `opacity`, the compositor handles it without
   the main thread, and the code stays readable. Canvas would only pay off an
   order of magnitude higher. — 2026-08-14
-- **Synthesized audio, not sample files** — no asset to download, no decode
-  latency on the first tap, and per-pop pitch variation comes free. — 2026-08-14
-- **Settings as a module-level store, not React context** — audio and haptics
-  read the setting on every single tap, from outside the component tree.
-  Threading props for two rarely-changed booleans would add re-renders on the
-  hot path for nothing. — 2026-08-14
+- **Settings as a module-level store, not React context** — `EmojiStage`
+  reads the enabled categories on every single tap, from outside the
+  component tree. Threading props for a rarely-changed value would add
+  re-renders on the hot path for nothing. — 2026-08-14
 - **Category pool flattened lazily and memoized, not precomputed on every
   settings change** — `EmojiStage` reads the enabled categories from the
-  settings store on every tap (same pattern as audio/haptics) and flattens
-  them via `emojiForCategories`, which caches on the sorted key set so an
-  unchanged selection returns the same array reference instead of rebuilding
-  it per tap. — 2026-08-15
+  settings store on every tap and flattens them via `emojiForCategories`,
+  which caches on the sorted key set so an unchanged selection returns the
+  same array reference instead of rebuilding it per tap. — 2026-08-15
+- **Sound and haptics removed** — the synthesized-pop audio engine and the
+  vibration wrapper, along with their settings fields and toggle UI, were cut
+  entirely. See `DECISIONS.md`. — 2026-08-15
 
 ## Known constraints / things to watch
 
-- **iOS audio unlock.** The `AudioContext` starts suspended and only resumes
-  from inside a real user gesture, so `unlockAudio()` is called on every
-  `pointerdown`. It also stays subject to the hardware silent switch — muting
-  the iPad mutes the pops, and there is no web API to override that.
-- **No haptics on iOS.** `navigator.vibrate` is unimplemented in Safari. The
-  wrapper is a no-op there and the settings toggle disables itself.
 - **Emoji rendering is the device's, not ours.** The curated set is restricted
   to single grapheme clusters at Unicode ≤ 12.0 precisely because ZWJ sequences
   and newer emoji degrade badly on tablets that haven't been updated. Any
@@ -85,7 +77,7 @@ Standard Vite React layout, plus:
 src/
   components/   EmojiStage, SettingsPanel, MenuButton, TapCounter, OnboardingHint
   data/         emoji.js + emoji.test.js
-  lib/          audio.js, haptics.js, settings.js
+  lib/          settings.js
   styles/       index.css (entry) + emoji.css + settings.css + hud.css
 scripts/
   new-feature.sh    worktree + branch per feature (from the scaffold)
