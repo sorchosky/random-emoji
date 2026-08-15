@@ -4,11 +4,15 @@
 // modules read these on every tap, and threading props down for something a
 // parent changes once a month isn't worth the re-renders.
 
+import { CATEGORY_KEYS } from '../data/emoji.js'
+
 const STORAGE_KEY = 'emoji-pop:settings'
 
 const DEFAULTS = {
   sound: true,
   haptics: true,
+  // Which emoji groups are in play. Everything, until a parent narrows it.
+  categories: CATEGORY_KEYS,
 }
 
 let current = { ...DEFAULTS }
@@ -35,12 +39,25 @@ function safeWrite(value) {
   }
 }
 
+/**
+ * Keep only real category keys, and fall back to the full set if nothing
+ * survives. A key left behind by a future rename must not strand the toy with
+ * an empty pool — the UI blocks an empty selection, but stored data predates
+ * whatever the UI currently enforces.
+ */
+function readCategories(value) {
+  if (!Array.isArray(value)) return DEFAULTS.categories
+  const known = CATEGORY_KEYS.filter((key) => value.includes(key))
+  return known.length > 0 ? known : DEFAULTS.categories
+}
+
 const stored = safeRead()
 if (stored) {
   current = {
     sound: typeof stored.sound === 'boolean' ? stored.sound : DEFAULTS.sound,
     haptics:
       typeof stored.haptics === 'boolean' ? stored.haptics : DEFAULTS.haptics,
+    categories: readCategories(stored.categories),
   }
 }
 

@@ -10,7 +10,8 @@
 - **State management:** `useState` inside `EmojiStage`, plus a hand-rolled
   subscribe store in `src/lib/settings.js`. No Zustand, no context.
 - **External APIs:** none. No network calls at runtime.
-- **Data/persistence:** `localStorage`, for two booleans.
+- **Data/persistence:** `localStorage`, for two booleans and one array of
+  enabled emoji-category keys.
 - **Testing:** Vitest for the emoji dataset; Playwright (`scripts/verify-app.mjs`)
   for the interaction behavior unit tests can't reach.
 
@@ -30,6 +31,7 @@ Pop            // one emoji currently on screen, lives ~2.65s then is dropped
 Settings       // persisted to localStorage under "emoji-pop:settings"
   sound        boolean
   haptics      boolean
+  categories   string[], subset of EMOJI_CATEGORIES keys — what pops on tap
 ```
 
 ## Key architectural decisions made up front
@@ -47,6 +49,12 @@ Settings       // persisted to localStorage under "emoji-pop:settings"
   read the setting on every single tap, from outside the component tree.
   Threading props for two rarely-changed booleans would add re-renders on the
   hot path for nothing. — 2026-08-14
+- **Category pool flattened lazily and memoized, not precomputed on every
+  settings change** — `EmojiStage` reads the enabled categories from the
+  settings store on every tap (same pattern as audio/haptics) and flattens
+  them via `emojiForCategories`, which caches on the sorted key set so an
+  unchanged selection returns the same array reference instead of rebuilding
+  it per tap. — 2026-08-15
 
 ## Known constraints / things to watch
 
@@ -75,10 +83,10 @@ Standard Vite React layout, plus:
 
 ```
 src/
-  components/   EmojiStage, SettingsPanel
+  components/   EmojiStage, SettingsPanel, MenuButton, TapCounter, OnboardingHint
   data/         emoji.js + emoji.test.js
   lib/          audio.js, haptics.js, settings.js
-  styles/       index.css (entry) + emoji.css + settings.css
+  styles/       index.css (entry) + emoji.css + settings.css + hud.css
 scripts/
   new-feature.sh    worktree + branch per feature (from the scaffold)
   run-tickets.sh    headless ticket runner

@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { EMOJI, EMOJI_CATEGORIES, pickRandomEmoji } from './emoji.js'
+import {
+  CATEGORY_KEYS,
+  CATEGORY_META,
+  EMOJI,
+  EMOJI_CATEGORIES,
+  emojiForCategories,
+  pickRandomEmoji,
+} from './emoji.js'
 
 const segmenter = new Intl.Segmenter('en', { granularity: 'grapheme' })
 const graphemeCount = (str) => [...segmenter.segment(str)].length
@@ -50,6 +57,42 @@ describe('emoji dataset', () => {
   })
 })
 
+describe('CATEGORY_META', () => {
+  it('has exactly one entry per EMOJI_CATEGORIES key', () => {
+    expect(Object.keys(CATEGORY_META).sort()).toEqual(CATEGORY_KEYS.sort())
+  })
+
+  it('gives every category a non-empty label and sample glyph', () => {
+    for (const key of CATEGORY_KEYS) {
+      expect(CATEGORY_META[key].label).toBeTruthy()
+      expect(CATEGORY_META[key].sample).toBeTruthy()
+    }
+  })
+})
+
+describe('emojiForCategories', () => {
+  it('returns exactly one category untouched', () => {
+    expect(emojiForCategories(['food'])).toEqual(EMOJI_CATEGORIES.food)
+  })
+
+  it('flattens multiple categories in declaration order', () => {
+    const pool = emojiForCategories(['hearts', 'animals'])
+    expect(pool).toEqual([...EMOJI_CATEGORIES.animals, ...EMOJI_CATEGORIES.hearts])
+  })
+
+  it('ignores unknown keys', () => {
+    expect(emojiForCategories(['food', 'not-a-category'])).toEqual(EMOJI_CATEGORIES.food)
+  })
+
+  it('returns an empty pool for an empty selection', () => {
+    expect(emojiForCategories([])).toEqual([])
+  })
+
+  it('falls back to the full set for non-array input', () => {
+    expect(emojiForCategories(undefined)).toEqual(EMOJI)
+  })
+})
+
 describe('pickRandomEmoji', () => {
   it('always returns an emoji from the pool', () => {
     for (let i = 0; i < 500; i++) {
@@ -83,5 +126,23 @@ describe('pickRandomEmoji', () => {
     for (const count of counts.values()) {
       expect(count).toBeLessThan(expected * 3)
     }
+  })
+
+  it('never returns outside a narrowed pool', () => {
+    const pool = EMOJI_CATEGORIES.food
+    let previous
+    for (let i = 0; i < 500; i++) {
+      previous = pickRandomEmoji(previous, pool)
+      expect(pool).toContain(previous)
+    }
+  })
+
+  it('still returns something when previous is outside the narrowed pool', () => {
+    const pool = EMOJI_CATEGORIES.food
+    expect(pool).toContain(pickRandomEmoji(EMOJI_CATEGORIES.animals[0], pool))
+  })
+
+  it('returns the sole entry for a pool of one', () => {
+    expect(pickRandomEmoji(undefined, ['🍎'])).toBe('🍎')
   })
 })

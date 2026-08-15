@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { pickRandomEmoji } from '../data/emoji.js'
+import { emojiForCategories, pickRandomEmoji } from '../data/emoji.js'
 import { playPop, unlockAudio } from '../lib/audio.js'
 import { buzz } from '../lib/haptics.js'
+import { getSettings } from '../lib/settings.js'
 
 // Must stay in sync with the animation duration in emoji.css. The node removes
 // itself on animationend; this is only the belt-and-braces sweep for the case
@@ -14,16 +15,18 @@ const LIFETIME_MS = 2650
 // slideshow. Oldest gets evicted first.
 const MAX_ON_SCREEN = 40
 
-// Parent gesture: a deliberate hold in the top-left corner. Sized and timed so
-// ordinary play never triggers it.
+// Parent gesture: a deliberate hold in the top-right corner — the same corner
+// as the visible menu button, so there's one place a parent reaches for
+// settings regardless of which entrance they use. Sized and timed so ordinary
+// play never triggers it.
 //
-// The hold zone is inset from x: 0 rather than starting at the literal edge.
-// In a normal (non-standalone) Safari tab, the leftmost ~20-30px of the
-// screen is claimed by iOS's own edge-swipe-back gesture recognizer, which
-// sits above WebKit's content view — no DOM API can suppress it. A hold that
-// starts inside that strip can lose the touch to iOS mid-hold, which arrives
-// here as a silent pointercancel that aborts the timer. Starting the zone
-// past that strip keeps the whole gesture inside WebKit's control.
+// The hold zone is inset from the edge rather than starting at x: window.innerWidth.
+// In a normal (non-standalone) Safari tab, the rightmost ~20-30px of the screen
+// is claimed by iOS's own edge-swipe-forward gesture recognizer, which sits
+// above WebKit's content view — no DOM API can suppress it. A hold that starts
+// inside that strip can lose the touch to iOS mid-hold, which arrives here as a
+// silent pointercancel that aborts the timer. Starting the zone short of that
+// strip keeps the whole gesture inside WebKit's control.
 const CORNER_MARGIN = 24
 const CORNER_SIZE = 64
 const HOLD_DURATION_MS = 2500
@@ -36,7 +39,8 @@ export default function EmojiStage({ onParentGesture, onTap }) {
   const holdRef = useRef(null)
 
   const spawn = useCallback((x, y) => {
-    const emoji = pickRandomEmoji(lastEmoji.current)
+    const pool = emojiForCategories(getSettings().categories)
+    const emoji = pickRandomEmoji(lastEmoji.current, pool)
     lastEmoji.current = emoji
 
     const pop = {
@@ -80,8 +84,8 @@ export default function EmojiStage({ onParentGesture, onTap }) {
       spawn(event.clientX, event.clientY)
 
       if (
-        event.clientX >= CORNER_MARGIN &&
-        event.clientX <= CORNER_MARGIN + CORNER_SIZE &&
+        event.clientX >= window.innerWidth - CORNER_MARGIN - CORNER_SIZE &&
+        event.clientX <= window.innerWidth - CORNER_MARGIN &&
         event.clientY <= CORNER_SIZE
       ) {
         cancelHold()
